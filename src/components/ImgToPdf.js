@@ -1,7 +1,11 @@
 import React, { useState, useRef } from "react";
 import jsPDF from "jspdf";
 import Dropzone from "react-dropzone";
-import { PiUploadSimpleLight, PiTrashLight } from "react-icons/pi";
+import {
+  PiUploadSimpleLight,
+  PiTrashLight,
+  PiDownloadSimple,
+} from "react-icons/pi";
 import { AiOutlineZoomIn } from "react-icons/ai";
 
 export const ImgToPdf = () => {
@@ -9,12 +13,19 @@ export const ImgToPdf = () => {
   const [margin, setMargin] = useState("no-margin");
   const [loading, setLoading] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState("#ffffff"); // Default background color is white
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleImageDrop = (acceptedFiles) => {
+    setErrorMessage(""); // Clear the error message if new image added to the box
     const updatedImages = images.concat(acceptedFiles);
     setImages(updatedImages);
   };
+
   const handleConvertToPdf = async (container) => {
+    if (images.length === 0) {
+      setErrorMessage("No images to convert!");
+      return;
+    }
     setLoading(true);
 
     const pdf = new jsPDF({
@@ -117,24 +128,28 @@ export const ImgToPdf = () => {
     <div className="container mx-auto my-12">
       <div className="mx-4">
         <div>
-          <h1 className="text-center text-3xl font-semibold mb-8">
+          <h1 className="text-center text-3xl font-semibold mb-8 border-b border-red-500 pb-4">
             Image to PDF{" "}
           </h1>
         </div>
 
-        <div className="flex gap-10 items-center mb-8">
-          <label>
-            Margin:
-            <select onChange={(e) => setMargin(e.target.value)}>
+        <div className="flex gap-10 items-center mb-8 justify-center">
+          {/* margin selection */}
+          <div className="border-b border-white hover:border-red-500 pb-1">
+            <span className="pr-2"> Margin:</span>
+            <select
+              onChange={(e) => setMargin(e.target.value)}
+              className="outline-none"
+            >
               <option value="no-margin">No Margin</option>
               <option value="low-margin">Low Margin</option>
               <option value="medium-margin">Low Margin</option>
               <option value="big-margin">Big Margin</option>
             </select>
-          </label>
+          </div>
 
           {/* Background color selection */}
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2 pb-1">
             Background Color:
             <input
               type="color"
@@ -142,10 +157,17 @@ export const ImgToPdf = () => {
               onChange={(e) => setBackgroundColor(e.target.value)}
             />
           </label>
-          <button onClick={() => handleConvertToPdf(containerRef.current)}>
+          {/* pdf convert button */}
+          <button
+            onClick={() => handleConvertToPdf(containerRef.current)}
+            className="border border-white hover:border-red-500 px-4 py-2 rounded bg-red-500 hover:bg-white text-white hover:text-red-500 font-semibold flex items-center gap-1"
+          >
             {loading ? "Generating PDF..." : "Convert to PDF"}
+            {loading ? null : <PiDownloadSimple className="text-xl" />}
           </button>
         </div>
+        {errorMessage && <p>{errorMessage}</p>}
+        {/* drop box for image */}
         <div className="bg-gray-100">
           <Dropzone onDrop={handleImageDrop}>
             {({ getRootProps, getInputProps }) => (
