@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import Modal from "react-modal";
 import jsPDF from "jspdf";
 import Dropzone from "react-dropzone";
 import {
@@ -6,6 +7,7 @@ import {
   PiTrashLight,
   PiDownloadSimple,
 } from "react-icons/pi";
+import { MdClose } from "react-icons/md";
 import { AiOutlineZoomIn } from "react-icons/ai";
 
 export const ImgToPdf = () => {
@@ -14,6 +16,8 @@ export const ImgToPdf = () => {
   const [loading, setLoading] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState("#ffffff"); // Default background color is white
   const [errorMessage, setErrorMessage] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [zoomedIndex, setZoomedIndex] = useState(0);
 
   const handleImageDrop = (acceptedFiles) => {
     setErrorMessage(""); // Clear the error message if new image added to the box
@@ -118,8 +122,10 @@ export const ImgToPdf = () => {
   };
 
   /* handling image zooming */
+  /* image zoom */
   const handleZoomImage = (index) => {
-    //progress
+    setShowModal(true);
+    setZoomedIndex(index);
   };
 
   const containerRef = useRef(null);
@@ -133,13 +139,13 @@ export const ImgToPdf = () => {
           </h1>
         </div>
 
-        <div className="flex gap-10 items-center mb-8 justify-center">
+        <div className="flex flex-wrap md:gap-10 gap-4 items-center mb-8 justify-center">
           {/* margin selection */}
-          <div className="border-b border-white hover:border-red-500 pb-1">
+          <div>
             <span className="pr-2"> Margin:</span>
             <select
               onChange={(e) => setMargin(e.target.value)}
-              className="outline-none"
+              className="border-b border-white hover:border-red-500 pb-1 outline-none"
             >
               <option value="no-margin">No Margin</option>
               <option value="low-margin">Low Margin</option>
@@ -166,7 +172,10 @@ export const ImgToPdf = () => {
             {loading ? null : <PiDownloadSimple className="text-xl" />}
           </button>
         </div>
-        {errorMessage && <p>{errorMessage}</p>}
+        {/* error message if there is no image */}
+        {errorMessage && (
+          <p className="text-red-500 font-semibold pb-3">{errorMessage}</p>
+        )}
         {/* drop box for image */}
         <div className="bg-gray-100">
           <Dropzone onDrop={handleImageDrop}>
@@ -203,22 +212,49 @@ export const ImgToPdf = () => {
                 alt={`Category ${index + 1}`}
                 className="w-[150px]"
               />
+              {/* zoom and delete button on the images */}
               <div className="absolute top-1 left-1 flex flex-col items-center justify-center">
                 <div className="flex gap-4">
-                  <button
-                    onClick={() => handleZoomImage(index)}
-                    className="bg-red-500 text-white rounded-full p-2"
-                  >
-                    <AiOutlineZoomIn className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteImage(index)}
-                    className="bg-red-500 text-white rounded-full p-2"
-                  >
-                    <PiTrashLight className="w-4 h-4" />
-                  </button>
+                  <div>
+                    <button
+                      onClick={() => handleZoomImage(index)}
+                      className="bg-red-500 text-white rounded-full p-2 w-9 h-9 flex items-center justify-center group"
+                    >
+                      <AiOutlineZoomIn className="group-hover:scale-125" />
+                    </button>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => handleDeleteImage(index)}
+                      className="bg-red-500 text-white rounded-full p-2 w-9 h-9 flex items-center justify-center group"
+                    >
+                      <PiTrashLight className="group-hover:scale-125" />
+                    </button>
+                  </div>
                 </div>
               </div>
+              {/* Modal to display the full-size image */}
+              <Modal
+                isOpen={showModal}
+                onRequestClose={() => setShowModal(false)}
+                contentLabel="Zoomed Image"
+              >
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                  }}
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-[50%] p-2"
+                >
+                  <MdClose size={25} />
+                </button>
+                <div className="w-full h-full flex items-center justify-center">
+                  <img
+                    src={URL.createObjectURL(images[zoomedIndex])}
+                    alt={`Zoomed Image ${zoomedIndex + 1}`}
+                    className="max-w-full max-h-full"
+                  />
+                </div>
+              </Modal>
             </div>
           ))}
         </div>
